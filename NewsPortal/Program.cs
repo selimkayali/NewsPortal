@@ -44,11 +44,11 @@ app.UseHttpsRedirection();
 
 var GetAllNews = () => new List<NewsDto>
 {
-    new NewsDto {NewsId = 1,NewsTitle = "news 1" },
-    new NewsDto {NewsId = 2,NewsTitle = "news 2" },
-    new NewsDto {NewsId = 3,NewsTitle = "news 3" },
-    new NewsDto {NewsId = 4,NewsTitle = "news 4" },
-    new NewsDto {NewsId = 5,NewsTitle = "news 5" }
+    new NewsDto {NewsId = 1,NewsTitle = "news 1", NewsContent = "news content 1" },
+    new NewsDto {NewsId = 2,NewsTitle = "news 2", NewsContent = "news content 2" },
+    new NewsDto {NewsId = 3,NewsTitle = "news 3", NewsContent = "news content 3" },
+    new NewsDto {NewsId = 4,NewsTitle = "news 4", NewsContent = "news content 4" },
+    new NewsDto {NewsId = 5,NewsTitle = "news 5", NewsContent = "news content 5" }
 };
 
 var news = () => "this is delegate";
@@ -60,7 +60,7 @@ app.MapGet("/news", async (NewsDb db) =>
 
 app.MapGet("/news1", (HttpRequest request) =>
 {
-    return Results.Ok(new NewsDto { NewsId = 1, NewsTitle = "test title 1" });
+    return Results.Ok(new NewsDto { NewsId = 1, NewsTitle = "test title 1", NewsContent = "test content 1" });
 });
 
 app.MapGet("/news2", () =>
@@ -69,7 +69,16 @@ app.MapGet("/news2", () =>
 });
 
 
-app.MapGet("/news/{id}", async (int id) => await Task.FromResult($"hello {id})"));
+app.MapGet("/news/{id}", async (int id, NewsDb db) =>
+{
+    var entity = await db.News
+    .Where(news => news.NewsId == id && news.IsActive == true)
+    .FirstOrDefaultAsync();
+
+    if (entity is null) return Results.NotFound();
+
+    return Results.Ok(entity);
+});
 
 
 app.MapPost("/news", async (NewsDto inputDto, NewsDb db) =>
@@ -88,18 +97,25 @@ app.MapPost("/news", async (NewsDto inputDto, NewsDb db) =>
 
 app.MapPut("/news/{id}", async (int id, NewsDto inputDto, NewsDb db) =>
 {
-    var newsEntity = db.News.Where(news => news.NewsId == id).FirstOrDefault();
+    var newsEntity = db.News
+    .Where(news => news.NewsId == id)
+    .FirstOrDefault();
+
     if (newsEntity is null) return Results.NotFound();
 
     newsEntity.NewsTitle = inputDto.NewsTitle;
     newsEntity.NewsContent = inputDto.NewsContent;
+
     return Results.Ok(await db.SaveChangesAsync());
 
 });
 
 app.MapDelete("/news", async (int id, NewsDb db) =>
 {
-    var entity = await db.News.Where(news => news.NewsId == id).FirstOrDefaultAsync();
+    var entity = await db.News
+    .Where(news => news.NewsId == id)
+    .FirstOrDefaultAsync();
+
     if (entity is null) return Results.NotFound();
 
     entity.IsActive = false;
