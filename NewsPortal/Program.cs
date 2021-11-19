@@ -53,6 +53,11 @@ var GetAllNews = () => new List<NewsDto>
 
 var news = () => "this is delegate";
 
+app.MapGet("cpu", () =>
+{
+    return Results.Ok(Environment.ProcessorCount);
+});
+
 app.MapGet("/news", async (NewsDb db) =>
 {
     return Results.Ok(await db.News.Where(news => news.IsActive == true).ToListAsync());
